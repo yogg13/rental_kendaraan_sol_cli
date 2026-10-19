@@ -14,11 +14,29 @@ import model.KendaraanFactory;
 //[SRP] Satu tanggung jawab: mengatur alur aplikasi
 //menerima pilihan dari View, memvalidasi, memanggil Model, mengirim hasil ke View.
 //Tidak menyimpan data sendiri, tidak memformat struk, tidak menghitung tarif. 
+//[DIP] Controller adalah modul tingkat tinggi (mengatur alur aplikasi)
+//      semua import di atas hanya interface dan entitas model
+//      tidak ada satupun kelas implementasi.
 public class RentalController {
-        private final KendaraanRepository kendaraanRepo = new KendaraanRepository();
-        private final PenyewaanRepository penyewaanRepo = new PenyewaanRepository();
-        private final RentalView view = new RentalView();
-        private final StrukView struktView = new StrukView();
+        private final KendaraanRepository kendaraanRepo;
+        private final PenyewaanRepository penyewaanRepo;
+        private final RentalView view;
+        private final StrukView struktView;
+        private final KendaraanFactory kendaraanFactory;
+
+        public RentalController(
+                KendaraanRepository kendaraanRepository,
+                PenyewaanRepository penyewaanRepository,
+                RentalView view,
+                StrukView strukView,
+                KendaraanFactory kendaraanFactory
+        ) {
+                this.kendaraanRepo = kendaraanRepository;
+                this.penyewaanRepo = penyewaanRepository;
+                this.view = view;
+                this.struktView = strukView;
+                this.kendaraanFactory = kendaraanFactory;
+        }
 
         public void tambahDataAwal(Kendaraan kendaraan) {
                 kendaraanRepo.tambah(kendaraan);
@@ -50,17 +68,21 @@ public class RentalController {
                 }
                 String merk = view.bacaTeks("Merk");
                 // [OCP] Daftar jenis diambil dari Factory, bukan ditulis manual di Controller.
-                String jenis = view.bacaTeks("Jenis (" + String.join("/", KendaraanFactory.JENIS) + ")").toUpperCase();
-                if (!List.of(KendaraanFactory.JENIS).contains(jenis)) {
-                view.tampilPesan("Jenis tidak dikenal.");
-                return;
+                String jenis = view.bacaTeks("Jenis (" + String.join("/", kendaraanFactory.daftarJenis()) + ")").toUpperCase();
+                // if (!List.of(kendaraanFactory.daftarJenis()).contains(jenis)) {
+                //         view.tampilPesan("Jenis tidak dikenal.");
+                //         return;
+                // }
+                if (!kendaraanFactory.daftarJenis().contains(jenis)) {
+                        view.tampilPesan("Jenis tidak dikenal.");
+                        return;
                 }
                 long tarif = view.bacaAngka("Tarif per hari");
                 if (tarif <= 0) {
-                view.tampilPesan("Tarif harus lebih dari 0.");
-                return;
+                        view.tampilPesan("Tarif harus lebih dari 0.");
+                        return;
                 }
-                kendaraanRepo.tambah(KendaraanFactory.buat(jenis, plat, merk, tarif));
+                kendaraanRepo.tambah(kendaraanFactory.buat(jenis, plat, merk, tarif));
                 view.tampilPesan("Kendaraan berhasil ditambahkan.");
         }
 

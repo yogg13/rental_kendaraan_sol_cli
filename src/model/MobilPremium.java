@@ -12,9 +12,15 @@ Pemilik rental ingin menambah Mobil Premium (misalnya Alphard) dengan dua aturan
 public class MobilPremium extends Mobil {
         private static final long ASURANSI_PREMIUM = 100000;
         private static final int MINIMAL_HARI = 3;
+        private static final long UANG_JAMINAN_PREMIUM = 2000000;
 
         public MobilPremium(String platNomor, String merk, long tarifPerHari) {
                 super(platNomor, merk, tarifPerHari);
+        }
+
+        @Override 
+        public long getUangJaminan() {
+                return UANG_JAMINAN_PREMIUM;
         }
 
         @Override

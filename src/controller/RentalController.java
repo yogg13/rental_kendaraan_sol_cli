@@ -4,6 +4,8 @@ import model.Kendaraan;
 import model.Penyewaan;
 import model.KendaraanRepository;
 import model.PenyewaanRepository;
+import model.WajibJaminan;
+import model.WajibSIM;
 import view.RentalView;
 import view.StrukView;
 import java.util.List;
@@ -66,12 +68,31 @@ public class RentalController {
                 String plat = view.bacaTeks("Plat Nomor");
                 Kendaraan kendaraan = kendaraanRepo.cariByPlat(plat);
                 if (kendaraan == null || !kendaraan.isTersedia()) {
-                        System.out.println("Kendaraan tidak ditemukan atau sedang disewa.");
+                        view.tampilPesan("Kendaraan tidak ditemukan atau sedang disewa.");
                         return;
                 }
                 String nama = view.bacaTeks("Nama Penyewa");
+
+                if (kendaraan instanceof WajibSIM wajibSIM) {
+                        String sim = view.bacaTeks("Golongan SIM Penyewa");
+                        if (!sim.equalsIgnoreCase(wajibSIM.getGolonganSIM())) {
+                                view.tampilPesan(
+                                        kendaraan.getMerk() 
+                                        + " Wajib SIM "
+                                        + wajibSIM.getGolonganSIM() + "."
+                                );
+                                return;
+                        }
+                }
+
                 int hari = (int) view.bacaAngka("Lama sewa (hari)");
 
+                if (kendaraan instanceof WajibJaminan wajibJaminan) {
+                        if (!view.konfirmasiUangJaminan(wajibJaminan.getUangJaminan())) {
+                                view.tampilPesan("Penyewaan dibatalkan.");
+                                return; 
+                        }
+                }
                 //[LSP] Validasi memakai kontrak kelas induk, BUKAN instanceof MobilPremium.
                 //      Berlaku sama untuk semua jenis, termasuk jenis yang dibuat nanti.
                 if (hari < kendaraan.getMinimalHari()) {
@@ -83,7 +104,7 @@ public class RentalController {
                 //[OCP] Controller tidak tahu dan tidak perlu tahu jenis kendaraannya.
                 //      Polimorfisme memilih hitungBiaya() milik subclass yang tepat.
                 long total = kendaraan.hitungBiaya(hari);
-                Penyewaan sewa = new Penyewaan(plat, nama, kendaraan, hari, total);
+                Penyewaan sewa = new Penyewaan(penyewaanRepo.buatIdBaru(), nama, kendaraan, hari, total);
                 penyewaanRepo.tambah(sewa);
                 kendaraan.setTersedia(false);
                 struktView.cetak(sewa);

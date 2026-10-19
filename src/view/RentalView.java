@@ -75,4 +75,16 @@ public class RentalView {
         public void tampilPesan(String pesan) {
                 System.out.println(">> " + pesan);
         }
+
+        public boolean konfirmasiUangJaminan(long nominal) {
+                tampilPesan(
+                        "Kendaraan ini memerlukan uang jaminan " 
+                        + Format.rupiah(nominal)
+                        + " (digunakan saat kendaraan dikembalikan)."
+                );
+
+                return bacaTeks(
+                        "Setuju? (y/n)"
+                ).equalsIgnoreCase("y");
+        }
 }
